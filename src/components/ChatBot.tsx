@@ -33,61 +33,130 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getStyleAdvice = (userMessage: string): string => {
+  const getStyleAdvice = (userMessage: string, conversationHistory: Message[]): string => {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Color theory responses
-    if (lowerMessage.includes('color') || lowerMessage.includes('colours')) {
-      if (lowerMessage.includes('warm')) {
-        return "Warm colors like reds, oranges, and yellows create energy and intimacy! They advance visually and make spaces feel cozy. Perfect for social areas like living rooms and dining spaces. ✨";
+    // Advanced color theory analysis
+    const analyzeColorRequest = () => {
+      // Specific color mentions
+      if (lowerMessage.includes('red')) {
+        return `Red is powerful and passionate! In design, it stimulates appetite (great for dining rooms) and creates urgency. Pair with neutrals like cream or sage green for balance. Consider burgundy for sophistication or coral for warmth. Red advances visually, so use it strategically as an accent rather than dominant color. What's the mood you're going for? 🔴`;
       }
-      if (lowerMessage.includes('cool')) {
-        return "Cool colors like blues, greens, and purples are calming and recede visually, making spaces feel larger. They're perfect for bedrooms and work spaces where you want tranquility! 💙";
+      if (lowerMessage.includes('blue')) {
+        return `Blue is the ultimate calming color! Navy creates sophistication and pairs beautifully with brass accents. Powder blue opens up spaces and works with whites and grays. Teal adds personality while staying serene. Blue recedes visually, making rooms feel larger. For productivity, try deeper blues - they enhance focus and creativity. What shade of blue speaks to you? 💙`;
       }
-      if (lowerMessage.includes('neutral')) {
-        return "Neutrals are your best friends! Beiges, grays, and whites create a timeless foundation. The 60-30-10 rule: 60% neutral base, 30% secondary color, 10% bold accent. Perfect balance! 🤍";
+      if (lowerMessage.includes('green')) {
+        return `Green is nature's healing color! Sage green is incredibly trendy - it's calming yet sophisticated. Forest green adds drama and works with gold accents. Mint refreshes spaces beautifully. Green reduces eye strain and promotes balance. It's perfect for bedrooms and workspaces. Pro tip: green works with almost any other color! What type of space are you greening? 🌿`;
       }
-      if (lowerMessage.includes('complementary')) {
-        return "Complementary colors sit opposite on the color wheel - like red & green, blue & orange! They create vibrant contrast and visual pop. Use sparingly for maximum impact! 🎯";
+      if (lowerMessage.includes('yellow')) {
+        return `Yellow is sunshine in a room! It stimulates creativity and happiness but can be overwhelming if overused. Soft buttery yellows create warmth without being jarring. Mustard yellow is sophisticated and pairs with navy or charcoal. Use yellow in spaces where you want energy - kitchens, entryways, creative spaces. Always test yellow in different lights! ☀️`;
       }
-      return "Colors have amazing psychological effects! Warm tones energize, cool tones calm, and neutrals ground. What specific color palette are you considering? I'd love to help you choose! 🌈";
+      if (lowerMessage.includes('purple') || lowerMessage.includes('lavender')) {
+        return `Purple is luxury and creativity combined! Lavender is calming and perfect for bedrooms. Deep eggplant creates drama and sophistication. Purple stimulates imagination - great for creative spaces. Pair with silver, gray, or soft yellows. Fun fact: purple was historically associated with royalty because the dye was so expensive! 💜`;
+      }
+      if (lowerMessage.includes('pink')) {
+        return `Pink isn't just feminine - it's scientifically proven to be calming! Dusty rose and blush tones are incredibly sophisticated. Pink works beautifully with navy, forest green, or charcoal. It adds warmth without being aggressive like red. Baker-Miller pink actually reduces aggression - that's why some prisons use it! What style are you considering? 🌸`;
+      }
+      if (lowerMessage.includes('orange')) {
+        return `Orange is energy and enthusiasm! It stimulates appetite and conversation - perfect for social spaces. Terracotta and burnt orange are earthy and sophisticated. Peach softens the intensity while keeping warmth. Orange pairs beautifully with blue (complementary) or with creams and browns. Use it where you want to encourage social interaction! 🧡`;
+      }
+      return null;
+    };
+
+    // Advanced aesthetic style analysis
+    const analyzeStyleRequest = () => {
+      if (lowerMessage.includes('scandinavian') || lowerMessage.includes('nordic')) {
+        return `Scandinavian design is about 'lagom' - just the right amount! Think light woods (birch, pine), whites, and cozy textures. Add one dramatic black element for contrast. The key is functionality meets beauty - every piece should serve a purpose. Natural light is crucial - keep windows unobstructed. Incorporate hygge elements like candles and soft throws for warmth in the minimal palette. 🕯️`;
+      }
+      if (lowerMessage.includes('industrial')) {
+        return `Industrial style celebrates raw materials! Exposed brick, steel beams, concrete floors - it's urban and edgy. Balance hard materials with warm woods and soft textiles. Edison bulb lighting is iconic but ensure proper task lighting too. Color palette: charcoal, rust, warm grays with black accents. Add plants to soften the hardness - greenery creates beautiful contrast! 🏭`;
+      }
+      if (lowerMessage.includes('farmhouse') || lowerMessage.includes('rustic')) {
+        return `Modern farmhouse is cozy elegance! Shiplap, barn doors, and wide-plank floors create the foundation. Color palette: whites, creams, soft grays with natural wood tones. Mix vintage finds with new pieces. The key is 'collected over time' feeling - not matchy-matchy. Add galvanized metals, mason jars, and fresh flowers. Comfort is paramount! 🚜`;
+      }
+      if (lowerMessage.includes('mediterranean')) {
+        return `Mediterranean style is warm and inviting! Think terra cotta, deep blues, and sun-washed whites. Wrought iron details, mosaic tiles, and natural stone create authenticity. Use warm metals like bronze and copper. Incorporate arches and curved lines - they're signature elements. Add olive branches, ceramics, and textured fabrics. It's about bringing outdoor living inside! 🌊`;
+      }
+      if (lowerMessage.includes('art deco')) {
+        return `Art Deco is glamour and geometric boldness! Rich jewel tones like emerald, sapphire, and gold. Geometric patterns, mirrored surfaces, and luxe materials like velvet and marble. Lighting is dramatic - think chandeliers and sconces. Add metallic accents in gold or brass. The style celebrates optimism and luxury - every element should feel intentional and glamorous! ✨`;
+      }
+      if (lowerMessage.includes('maximalist')) {
+        return `Maximalism is 'more is more' done right! It's about intentional abundance - every piece should bring you joy. Layer patterns boldly but keep a cohesive color story. Use the 'triangle rule' - repeat colors in three places around the room. Gallery walls, collected treasures, rich textures - it's about personality over perfection. The key is confidence! 🎨`;
+      }
+      return null;
+    };
+
+    // Check for specific color requests first
+    const colorAdvice = analyzeColorRequest();
+    if (colorAdvice) return colorAdvice;
+
+    // Check for style requests
+    const styleAdvice = analyzeStyleRequest();
+    if (styleAdvice) return styleAdvice;
+
+    // Advanced color theory concepts
+    if (lowerMessage.includes('complementary')) {
+      return `Complementary colors create the strongest contrast! Red-green, blue-orange, yellow-purple. They're opposite on the color wheel and make each other 'pop.' Use the 80/20 rule - one color dominates, the complementary is the accent. Too much creates visual chaos. Try split-complementary (one color plus the two adjacent to its complement) for gentler contrast. What colors are you considering? 🎯`;
     }
 
-    // Style and aesthetics responses
-    if (lowerMessage.includes('minimalist') || lowerMessage.includes('minimal')) {
-      return "Minimalism is all about 'less is more'! Focus on clean lines, functional pieces, and negative space. Stick to a neutral palette with maybe one accent color. Quality over quantity always! ✨";
+    if (lowerMessage.includes('analogous')) {
+      return `Analogous colors are neighbors on the color wheel - they create harmony! Like blue, blue-green, and green. These schemes are pleasing and serene because they occur naturally. Choose one dominant color, use the second as support, and the third as accent. Perfect for creating calm, cohesive spaces. Ocean blues and greens, or sunset oranges and reds work beautifully! 🌈`;
     }
 
-    if (lowerMessage.includes('cozy') || lowerMessage.includes('hygge')) {
-      return "Cozy vibes are created through warm textures, soft lighting, and earthy tones! Think layered textiles, warm woods, and candlelight. Add plants for that lived-in, nurturing feel! 🕯️";
+    if (lowerMessage.includes('monochromatic')) {
+      return `Monochromatic = one color in all its variations! Different tints (adding white), shades (adding black), and tones (adding gray) of the same hue. It's sophisticated and calming but can be boring without texture variation. Add visual interest through different materials - matte, glossy, rough, smooth. Include a tiny pop of complementary color for life! 🎨`;
     }
 
-    if (lowerMessage.includes('modern') || lowerMessage.includes('contemporary')) {
-      return "Modern style loves clean geometry, mixed materials, and bold contrasts! Try pairing sleek metals with natural wood, or crisp whites with one dramatic accent wall. Less ornamentation, more impact! 🏢";
+    if (lowerMessage.includes('triadic')) {
+      return `Triadic colors are evenly spaced on the color wheel - like red, blue, yellow! They're vibrant and energetic but need careful balance. Use one as dominant, others as accents. It's bold and playful - great for creative spaces or children's rooms. For sophistication, choose muted versions of triadic colors rather than pure hues. 🔺`;
     }
 
-    if (lowerMessage.includes('bohemian') || lowerMessage.includes('boho')) {
-      return "Boho style is about layered textures, rich jewel tones, and collected treasures! Mix patterns confidently, add plants everywhere, and don't forget metallic accents for glamour! ✨🌿";
+    // Lighting and ambiance
+    if (lowerMessage.includes('lighting') || lowerMessage.includes('light')) {
+      return `Lighting is the secret sauce of great design! Layer it: ambient (general mood), task (functionality), and accent (highlighting features). Color temperature matters - 2700K is warm and cozy, 3000K is comfortable, 4000K+ is energizing but can feel clinical. Dimmers are essential! Natural light changes throughout the day, so test your colors at different times. Golden hour makes everything beautiful! 💡`;
     }
 
-    // General style questions
-    if (lowerMessage.includes('small space') || lowerMessage.includes('tiny')) {
-      return "Small spaces can feel huge with the right tricks! Use light colors to reflect light, mirrors to double visual space, and vertical storage. Multi-functional furniture is your secret weapon! 📏";
+    // Spatial concerns
+    if (lowerMessage.includes('small space') || lowerMessage.includes('tiny') || lowerMessage.includes('compact')) {
+      return `Small spaces are about smart design tricks! Light colors reflect light and feel spacious. Mirrors strategically placed double visual space - across from windows is perfect. Vertical storage draws the eye up. Multi-functional furniture is key. Use the same color on walls and ceiling to blur boundaries. One dramatic element prevents boring - maybe a bold accent wall or stunning light fixture! 📏`;
     }
 
-    if (lowerMessage.includes('lighting')) {
-      return "Lighting transforms everything! Layer your lighting: ambient (general), task (functional), and accent (mood). Warm light (2700K-3000K) feels cozy, cool light (4000K+) energizes! 💡";
+    // Pattern and texture advice
+    if (lowerMessage.includes('pattern') || lowerMessage.includes('texture')) {
+      return `Patterns and textures add soul to spaces! Mix scales - large, medium, small patterns together. Use the 'odd number rule' - group patterns in threes or fives. Texture is pattern you can feel - rough jute, smooth velvet, nubby bouclé. They add visual interest even in neutral spaces. When mixing patterns, keep one element consistent - color, scale, or style. Confidence is key! 🧶`;
     }
 
-    // Default responses with style tips
-    const defaultResponses = [
-      "That's an interesting style question! Remember, the best spaces reflect your personality. What aesthetic speaks to your soul? 💫",
-      "Style is so personal! I love helping people discover their unique aesthetic. Tell me more about what inspires you! 🎨",
-      "Great question! The key to any beautiful space is balance - between colors, textures, and proportions. What area are you styling? ✨",
-      "I'm excited to help with your style journey! Every beautiful space starts with understanding what makes you feel happy and peaceful. 🏡"
+    // Personalized contextual responses based on conversation
+    const recentTopics = conversationHistory.slice(-3).map(msg => msg.content.toLowerCase()).join(' ');
+    
+    if (recentTopics.includes('bedroom')) {
+      return `For bedrooms, I always recommend the psychology of color! Blues and greens promote restful sleep - they lower heart rate and blood pressure. Avoid bright reds or oranges which are too stimulating. Soft, muted tones create serenity. Consider blackout options and layered lighting for different moods. What's your ideal bedroom feeling - cozy cocoon or serene spa? 🛏️`;
+    }
+
+    if (recentTopics.includes('kitchen')) {
+      return `Kitchens are the heart of the home! Warm colors stimulate appetite - reds, oranges, warm yellows. But they also need to feel clean and fresh, so balance with whites or cool neutrals. Good task lighting is crucial for food prep. Consider the 'kitchen triangle' - stove, sink, fridge should be easily accessible. What's your cooking style - chef's paradise or casual family hub? 👨‍🍳`;
+    }
+
+    // Sophisticated default responses
+    const contextualResponses = [
+      `Color psychology is fascinating! Every hue affects our emotions and behaviors differently. What specific feeling are you trying to create in your space? I can suggest colors that naturally evoke that mood. 🧠`,
+      
+      `The golden ratio appears in the most beautiful designs! It's about proportions that feel naturally pleasing. Are you working on furniture arrangement, color proportions, or overall room layout? 📐`,
+      
+      `Biophilic design is so important - humans need connection to nature! Even in urban spaces, we can add natural textures, organic shapes, and living elements. How can we bring nature into your design? 🌿`,
+      
+      `Cultural color meanings are so rich! Red means luck in China but danger in the West. Blue is calming universally but can mean sadness or trust. What cultural or personal associations do colors have for you? 🌍`,
+      
+      `The 60-30-10 rule is design gold! 60% dominant neutral, 30% secondary color, 10% bold accent. It creates perfect balance. Are you struggling with color proportions in your space? ⚖️`,
     ];
 
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+    // Choose response based on message sentiment and complexity
+    if (lowerMessage.length > 50) {
+      // Longer, more detailed question
+      return contextualResponses[0];
+    }
+    
+    return contextualResponses[Math.floor(Math.random() * contextualResponses.length)];
   };
 
   const handleSendMessage = async () => {
@@ -104,18 +173,18 @@ const ChatBot = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI thinking time
+    // Simulate AI thinking time with more realistic delay for complex responses
     setTimeout(() => {
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: getStyleAdvice(inputValue),
+        content: getStyleAdvice(inputValue, messages),
         isUser: false,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }, 1500 + Math.random() * 2000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
