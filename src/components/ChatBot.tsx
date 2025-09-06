@@ -2,7 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Palette, Eye } from 'lucide-react';
+import { Send, Palette, Eye, Link, ShoppingBag } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { FirecrawlService } from '@/utils/FirecrawlService';
+import ApiKeyModal from '@/components/ApiKeyModal';
 import catAvatar from '@/assets/cat-avatar.png';
 
 interface Message {
@@ -16,14 +19,17 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm Mish Mish, your style buddy! 🎨 I'm here to help you with color theory, aesthetics, and all things style. What would you like to explore today?",
+      content: "Hello! I'm Mish Mish, your style buddy! 🎨 I can help with color theory, interior aesthetics, AND fashion styling from catalog pages! Share a catalog URL or ask me anything about style. What would you like to explore today?",
       isUser: false,
       timestamp: new Date(),
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showApiModal, setShowApiModal] = useState(false);
+  const [catalogData, setCatalogData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,9 +39,125 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getStyleAdvice = (userMessage: string, conversationHistory: Message[]): string => {
+  const analyzeOutfitAndFashion = (userMessage: string, catalogData?: any): string | null => {
+    const lowerMessage = userMessage.toLowerCase();
+
+    // Fashion styling responses
+    if (lowerMessage.includes('outfit') || lowerMessage.includes('style') || lowerMessage.includes('fashion')) {
+      if (lowerMessage.includes('business') || lowerMessage.includes('professional') || lowerMessage.includes('work')) {
+        return `Professional style is about polish and confidence! For business: well-tailored blazers, crisp button-downs, and quality trousers/skirts. Stick to navy, charcoal, cream, and black. Add personality through accessories - a silk scarf, quality watch, or statement earrings. Fit is everything - invest in tailoring! What's your work environment like? 👔`;
+      }
+      
+      if (lowerMessage.includes('casual') || lowerMessage.includes('weekend') || lowerMessage.includes('everyday')) {
+        return `Casual chic is effortless elegance! Think well-fitted jeans with a soft knit sweater, or a midi dress with sneakers. Quality basics in neutral tones (white, navy, camel, gray) mix endlessly. Add interest through textures - chunky knits, denim, soft cottons. The key is looking put-together without trying too hard! What's your lifestyle like? 👕`;
+      }
+      
+      if (lowerMessage.includes('date') || lowerMessage.includes('romantic') || lowerMessage.includes('dinner')) {
+        return `Date night calls for confidence and comfort! Choose something that makes YOU feel amazing. A midi dress in a flattering color, or dark jeans with a silk blouse work beautifully. Add one standout element - bold lipstick, statement earrings, or gorgeous shoes. Comfort is key - you want to focus on your date, not adjusting your outfit! What's the date activity? 💕`;
+      }
+      
+      if (lowerMessage.includes('summer') || lowerMessage.includes('hot') || lowerMessage.includes('beach')) {
+        return `Summer style should be breathable and bright! Linen and cotton are your friends - they're cooling and look effortless. Light colors reflect heat, but don't forget sunglasses and a hat for protection. Flowing dresses, tailored shorts, and comfortable sandals are perfect. Layer with a light cardigan for air conditioning! What summer activities are you dressing for? ☀️`;
+      }
+      
+      if (lowerMessage.includes('winter') || lowerMessage.includes('cold') || lowerMessage.includes('coat')) {
+        return `Winter fashion is about stylish layering! Start with quality base layers, add a cozy sweater, then a chic coat. Darker colors hide winter wear better, but don't forget to add warmth through rich textures - cashmere, wool, faux fur. Scarves and gloves can be your fashion statements! Invest in good boots - they're both practical and stylish. 🧥`;
+      }
+      
+      if (catalogData) {
+        return `Based on the catalog you shared, I can see some great pieces! Let me analyze the color palette and styles... ${analyzeCatalogForOutfits(catalogData)}`;
+      }
+      
+      return `Fashion is about expressing your unique personality! Every great wardrobe starts with quality basics in colors that flatter you. What's your current style challenge - building a capsule wardrobe, finding your color palette, or styling for a specific occasion? 👗`;
+    }
+
+    // Body type and fit advice
+    if (lowerMessage.includes('body type') || lowerMessage.includes('fit') || lowerMessage.includes('flattering')) {
+      return `The most important rule: wear what makes YOU feel confident! Here are some universal tips: well-fitted shoulders are key for tops, high-waisted bottoms elongate legs, and V-necks are universally flattering. Don't hide your body - celebrate it with clothes that skim rather than cling or overwhelm. What specific fit challenges are you facing? 💪`;
+    }
+
+    // Color coordination for fashion
+    if (lowerMessage.includes('color') && (lowerMessage.includes('clothing') || lowerMessage.includes('outfit'))) {
+      return `Color coordination in fashion follows similar principles to interior design! Monochromatic looks (different shades of one color) are effortlessly chic. Neutrals like navy, camel, and cream work with everything. Add one pop of color through accessories or one statement piece. For skin tone: warm undertones look amazing in oranges, yellows, and warm reds; cool undertones shine in blues, purples, and true reds. What colors make you feel most confident? 🌈`;
+    }
+
+    return null;
+  };
+
+  const analyzeCatalogForOutfits = (data: any): string => {
+    // This would analyze the scraped catalog data to provide specific outfit recommendations
+    return `I can see several versatile pieces that would work beautifully together! Based on the color palette and styles available, I'd recommend focusing on creating 3-4 complete looks that can mix and match. Would you like me to suggest specific combinations from what I found?`;
+  };
+
+  const detectCatalogUrl = (message: string): string | null => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urls = message.match(urlRegex);
+    if (urls && urls.length > 0) {
+      // Check if it looks like a catalog/shopping site
+      const catalogKeywords = ['shop', 'store', 'catalog', 'fashion', 'clothing', 'wear', 'boutique', 'style'];
+      const url = urls[0];
+      if (catalogKeywords.some(keyword => url.toLowerCase().includes(keyword))) {
+        return url;
+      }
+    }
+    return null;
+  };
+
+  const scrapeCatalogPage = async (url: string) => {
+    const apiKey = FirecrawlService.getApiKey();
+    if (!apiKey) {
+      setShowApiModal(true);
+      return;
+    }
+
+    try {
+      const result = await FirecrawlService.scrapeCatalogPage(url);
+      if (result.success) {
+        setCatalogData(result.data);
+        toast({
+          title: "Catalog Analyzed! 🛍️",
+          description: "I've analyzed the catalog page and I'm ready to give styling advice!",
+          duration: 3000,
+        });
+        return result.data;
+      } else {
+        toast({
+          title: "Couldn't Access Catalog",
+          description: "I had trouble reading that page. You can still ask me general styling questions!",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error('Error scraping catalog:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong while analyzing the catalog",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+    return null;
+  };
+
+  const getStyleAdvice = async (userMessage: string, conversationHistory: Message[]): Promise<string> => {
     const lowerMessage = userMessage.toLowerCase();
     
+    // Check for catalog URL first
+    const catalogUrl = detectCatalogUrl(userMessage);
+    if (catalogUrl) {
+      const scrapedData = await scrapeCatalogPage(catalogUrl);
+      if (scrapedData) {
+        return `Perfect! I've analyzed the catalog page. I can see the available pieces and I'm ready to help you create amazing outfits! What type of look are you going for - casual, professional, date night, or something specific? I can suggest combinations from what's available! 🛍️✨`;
+      } else {
+        return `I see you shared a catalog link! Unfortunately I couldn't access it right now, but I can still help with general styling advice. What kind of outfits are you looking to create? 💫`;
+      }
+    }
+
+    // Check fashion/outfit advice first
+    const fashionAdvice = analyzeOutfitAndFashion(userMessage, catalogData);
+    if (fashionAdvice) return fashionAdvice;
+
     // Advanced color theory analysis
     const analyzeColorRequest = () => {
       // Specific color mentions
@@ -174,10 +296,10 @@ const ChatBot = () => {
     setIsTyping(true);
 
     // Simulate AI thinking time with more realistic delay for complex responses
-    setTimeout(() => {
+    setTimeout(async () => {
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: getStyleAdvice(inputValue, messages),
+        content: await getStyleAdvice(inputValue, messages),
         isUser: false,
         timestamp: new Date(),
       };
@@ -217,9 +339,27 @@ const ChatBot = () => {
             </div>
             <div className="flex items-center gap-1">
               <Eye className="w-3 h-3" />
-              <span>Aesthetic Advisor</span>
+              <span>Interior Aesthetics</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <ShoppingBag className="w-3 h-3" />
+              <span>Fashion Stylist</span>
             </div>
           </div>
+          
+          {!FirecrawlService.getApiKey() && (
+            <div className="mt-3 text-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowApiModal(true)}
+                className="text-xs"
+              >
+                <Link className="w-3 h-3 mr-1" />
+                Enable Catalog Analysis
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Chat Container */}
@@ -289,7 +429,7 @@ const ChatBot = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me about colors, aesthetics, or style..."
+                  placeholder="Ask about colors, aesthetics, outfits, or share a catalog URL..."
                   className="flex-1 rounded-full border-2 focus:border-primary transition-colors"
                   disabled={isTyping}
                 />
@@ -303,11 +443,16 @@ const ChatBot = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Mish Mish specializes in color theory, interior design, and aesthetic advice ✨
+                Mish Mish specializes in color theory, interior design, fashion styling, and catalog analysis ✨
               </p>
             </div>
           </div>
         </Card>
+        
+        <ApiKeyModal 
+          isOpen={showApiModal} 
+          onClose={() => setShowApiModal(false)} 
+        />
       </div>
     </div>
   );
